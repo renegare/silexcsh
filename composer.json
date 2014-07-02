@@ -1,0 +1,27 @@
+{
+    "name": "renegare/silexcsh",
+    "description": "Cookie Session Handler for Silex (store session data client side)",
+    "keywords": ["silex", "session", "cookies", "renegare"],
+    "license": "MIT",
+    "authors": [{"name": "Mudi Ugbowanko", "email": "mudi@renegare.com"}],
+
+    "minimum-stability": "stable",
+
+    "autoload": {
+        "psr-4": {
+            "Renegare\\SilexCSH": "."
+        }
+    },
+
+    "require": {
+        "php": ">=5.4.0"
+    },
+
+    "require-dev": {
+        "silex/silex": ">=1.0",
+        "symfony/http-foundation": ">=2.4,<2.6-dev",
+        "phpunit/phpunit": "3.7.*",
+        "symfony/browser-kit": ">=2.3,<2.6-dev",
+        "satooshi/php-coveralls": "dev-master"
+    }
+}
