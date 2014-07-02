@@ -1,7 +1,7 @@
 # SilexCSH ([Silex][1] Cookie Session Handler)
 
-[![Build Status](https://travis-ci.org/renegare/sliexcsh.png?branch=master)](https://travis-ci.org/renegare/sliexcsh)
-[![Coverage Status](https://coveralls.io/repos/renegare/sliexcsh/badge.png)](https://coveralls.io/r/renegare/sliexcsh)
+[![Build Status](https://travis-ci.org/renegare/silexcsh.png?branch=master)](https://travis-ci.org/renegare/silexcsh)
+[![Coverage Status](https://coveralls.io/repos/renegare/silexcsh/badge.png)](https://coveralls.io/r/renegare/silexcsh)
 
 ## Requirements
 
