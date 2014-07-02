@@ -20,7 +20,7 @@ $ composer require renegare/silexcsh:dev-master
 ```
 <?php
 
-echo "not yet figured!?\n";
+echo "soon come\n";
 
 ```
 
