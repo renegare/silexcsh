@@ -28,7 +28,7 @@ class CookieSessionServiceProvider extends SessionServiceProvider implements Log
         $this->app = $app;
 
         $app['session.storage.handler'] = $app->share(function ($app) {
-            $options = $this->mergeDefaultOptions($app['session.cookie.options']);
+            $options = $this->mergeDefaultOptions(isset($app['session.cookie.options'])? $app['session.cookie.options'] : []);
             return new CookieSessionHandler(
                 $options['name'],
                 $options['lifetime'],
@@ -54,16 +54,12 @@ class CookieSessionServiceProvider extends SessionServiceProvider implements Log
                 }
             }
 
-            $options = $this->mergeDefaultOptions($app['session.cookie.options']);
+            $options = $this->mergeDefaultOptions(isset($app['session.cookie.options'])? $app['session.cookie.options'] : []);
 
             $session = new CookieSession($app['session.storage']);
             $session->setName($options['name']);
             return $session;
         });
-
-        if(isset($app['logger']) && $app['logger']) {
-            $this->setLogger($app['logger']);
-        }
     }
 
     protected function mergeDefaultOptions(array $options) {
@@ -106,7 +102,7 @@ class CookieSessionServiceProvider extends SessionServiceProvider implements Log
         $data = $session->all();
         $handler = $this->app['session.storage.handler'];
 
-        $this->info('< SESSION OUTGOINT: ', ['session_data' => $data]);
+        $this->info('< SESSION OUTGOING: ', ['session_data' => $data]);
 
         if(count($data) > 0) {
             $handler->write('', serialize($data));
@@ -123,6 +119,11 @@ class CookieSessionServiceProvider extends SessionServiceProvider implements Log
     }
 
     public function boot(Application $app) {
+
+        if(isset($app['logger']) && $app['logger']) {
+            $this->setLogger($app['logger']);
+        }
+
         $app['dispatcher']->addListener(KernelEvents::REQUEST, array($this, 'onEarlyKernelRequest'), 128);
 
         $app['dispatcher']->addListener(KernelEvents::RESPONSE, array($this, 'onKernelResponse'), -128);
