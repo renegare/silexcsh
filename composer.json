@@ -11,9 +11,11 @@
         }
     },
 
+    "minimum-stability": "stable",
+
     "require": {
         "php": ">=5.4.0",
-        "psr/log": "*"
+        "psr/log": "1.0.0"
     },
 
     "require-dev": {
