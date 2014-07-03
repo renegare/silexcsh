@@ -116,11 +116,16 @@ class CookieSessionHandlerTest extends \PHPUnit_Framework_TestCase {
         $handler = new CookieSessionHandler('test_session');
         $this->assertFalse($handler->getCookie());
         $this->assertTrue($handler->destroy(''));
-        $this->assertNull($handler->getCookie());
+
+
+        $cookie = $handler->getCookie();
+        $this->assertEquals('test_session', $cookie->getName());
+        $this->assertNull($cookie->getValue());
+
     }
 
     public function testGetCookieName() {
-        $handler = new CookieSessionHandler('test_session');        
+        $handler = new CookieSessionHandler('test_session');
         $this->assertEquals('test_session', $handler->getCookieName());
     }
 }

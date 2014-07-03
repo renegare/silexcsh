@@ -22,12 +22,12 @@ class CookieSessionHandler implements \SessionHandlerInterface {
     protected $secure;
     protected $httpOnly;
 
-    /** 
+    /**
      * @var mixed(false|null|Cookie) - effects getCookie return value
      * > false - means no cookie was accessed|written too and therefore no cookie will be returned
      * > null - means cookie was destroyed
      * > Cookie - means some data has been written and a cookie will be returned
-     */ 
+     */
     protected $cookie = false;
 
     /**
@@ -58,7 +58,16 @@ class CookieSessionHandler implements \SessionHandlerInterface {
      * {@inheritdoc}
      */
     public function destroy($sessionId) {
-        $this->cookie = null;
+        $this->cookie = new Cookie(
+            $this->name,
+            null,
+            0,
+            $this->path,
+            $this->domain,
+            $this->secure,
+            $this->httpOnly
+        );
+
         return true;
     }
 
@@ -103,7 +112,6 @@ class CookieSessionHandler implements \SessionHandlerInterface {
      * {@inheritdoc}
      */
     public function write($sessionId, $sessionData) {
-
         $expire = $this->lifeTime === 0 ? 0 : strtotime('now') + $this->lifeTime;
 
         $this->cookie = new Cookie(
