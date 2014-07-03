@@ -5,8 +5,6 @@
     "license": "MIT",
     "authors": [{"name": "Mudi Ugbowanko", "email": "mudi@renegare.com"}],
 
-    "minimum-stability": "stable",
-
     "autoload": {
         "psr-4": {
             "Renegare\\SilexCSH\\": ""
