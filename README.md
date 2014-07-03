@@ -24,8 +24,7 @@ $ composer require renegare/silexcsh:dev-master
 
     $app = new Application();
 
-    // Do not use both!
-    // $app->register(new Silex\Provider\SessionServiceProvider);
+    // Replace: $app->register(new Silex\Provider\SessionServiceProvider);
     $app->register(new Renegare\SilexCSH\CookieSessionServiceProvider);
 
     $app->get('/doing-nothing', function(Application $app) {
