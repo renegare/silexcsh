@@ -11,7 +11,13 @@ use Symfony\Component\HttpKernel\Event\GetResponseEvent;
 use Symfony\Component\HttpFoundation\Session\Storage\PhpBridgeSessionStorage;
 use Symfony\Component\HttpFoundation\Cookie;
 
-class CookieSessionServiceProvider extends SessionServiceProvider {
+use Psr\Log\LoggerInterface;
+use Psr\Log\LoggerAwareInterface;
+use Psr\Log\LoggerTrait;
+use Psr\Log\LoggerAwareTrait;
+
+class CookieSessionServiceProvider extends SessionServiceProvider implements LoggerAwareInterface, LoggerInterface {
+    use LoggerTrait, LoggerAwareTrait;
 
     protected $app;
 
@@ -30,8 +36,17 @@ class CookieSessionServiceProvider extends SessionServiceProvider {
                 $app['session.storage.handler']
             );
         });
-        
-        $app['session'] = $app->extend('session', function ($session, $app) {
+
+        $app['session'] = $app->share(function($app) {
+            if (!isset($app['session.storage'])) {
+                if ($app['session.test']) {
+                    $app['session.storage'] = $app['session.storage.test'];
+                } else {
+                    $app['session.storage'] = $app['session.storage.native'];
+                }
+            }
+
+            $session = new CookieSession($app['session.storage']);
             $session->setName('silexcsh');
             return $session;
         });
@@ -82,5 +97,14 @@ class CookieSessionServiceProvider extends SessionServiceProvider {
         $app['dispatcher']->addListener(KernelEvents::REQUEST, array($this, 'onEarlyKernelRequest'), 128);
 
         $app['dispatcher']->addListener(KernelEvents::RESPONSE, array($this, 'onKernelResponse'), -128);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function log($level, $message, array $context = array()) {
+        if($this->logger) {
+            $this->logger->log($level, $message, $context);
+        }
     }
 }

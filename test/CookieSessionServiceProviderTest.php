@@ -124,8 +124,10 @@ class CookieSessionServiceProviderTest extends \PHPUnit_Framework_TestCase {
         $client->request('GET', '/persist');
         $response = $client->getResponse();
         $this->assertTrue($response->isOk());
-
-        $this->assertEquals('silexcsh', $this->app['session']->getName());
+        
+        $session = $this->app['session'];
+        $this->assertInstanceOf('Renegare\SilexCSH\CookieSession', $session);
+        $this->assertEquals('silexcsh', $session->getName());
     }
 
     protected function getSessionData(Cookie $cookie) {
