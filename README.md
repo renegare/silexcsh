@@ -22,28 +22,36 @@ $ composer require renegare/silexcsh:dev-master
 ```
 <?php
 
-    $app = new Application();
+$app = new Silex\Application();
 
-    // Replace: $app->register(new Silex\Provider\SessionServiceProvider);
-    $app->register(new Renegare\SilexCSH\CookieSessionServiceProvider);
+$app->register(new Renegare\SilexCSH\CookieSessionServiceProvider, [
+    'session.cookie.options' => [
+        'name' => 'CUSTOMNAME', // string
+        'lifetime' => 0,        // int
+        'path' => '/',          // string
+        'domain' => null,       // string
+        'secure' => false,      // boolean
+        'httponly' => true      // boolean
+    ]
+]);
 
-    $app->get('/doing-nothing', function(Application $app) {
-        return 'Nothing going on here with sessions';
-    });
+$app->get('/doing-nothing', function(Application $app) {
+    return 'Nothing going on here with sessions';
+});
 
-    $app->get('/persist', function(Application $app){
-        $app['session']->set('message', 'Hello There!');
-        return 'Check your cookie!';
-    });
+$app->get('/persist', function(Application $app){
+    $app['session']->set('message', 'Hello There!');
+    return 'Check your cookie!';
+});
 
-    $app->get('/read', function(Application $app){
-        return print_r($app['session']->all(), true);
-    });
+$app->get('/read', function(Application $app){
+    return print_r($app['session']->all(), true);
+});
 
-    $app->get('/destroy', function(Application $app) {
-        $app['session']->clear();
-        return 'Ok Bye Bye!';
-    });
+$app->get('/destroy', function(Application $app) {
+    $app['session']->clear();
+    return 'Ok Bye Bye!';
+});
 
 ```
 
