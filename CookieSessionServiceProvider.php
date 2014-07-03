@@ -28,7 +28,15 @@ class CookieSessionServiceProvider extends SessionServiceProvider implements Log
         $this->app = $app;
 
         $app['session.storage.handler'] = $app->share(function ($app) {
-            return new CookieSessionHandler('silexcsh');
+            $options = $this->mergeDefaultOptions($app['session.cookie.options']);
+            return new CookieSessionHandler(
+                $options['name'],
+                $options['lifetime'],
+                $options['path'],
+                $options['domain'],
+                $options['secure'],
+                $options['httponly']
+            );
         });
 
         $app['session.storage.native'] = $app->share(function ($app) {
@@ -46,14 +54,27 @@ class CookieSessionServiceProvider extends SessionServiceProvider implements Log
                 }
             }
 
+            $options = $this->mergeDefaultOptions($app['session.cookie.options']);
+
             $session = new CookieSession($app['session.storage']);
-            $session->setName('silexcsh');
+            $session->setName($options['name']);
             return $session;
         });
 
         if(isset($app['logger']) && $app['logger']) {
             $this->setLogger($app['logger']);
         }
+    }
+
+    protected function mergeDefaultOptions(array $options) {
+        return array_merge([
+            'name' => 'PHPSESSIONID', // string
+            'lifetime' => 0,        // int
+            'path' => '/',          // string
+            'domain' => null,       // string
+            'secure' => false,      // boolean
+            'httponly' => true      // boolean
+        ], $options);
     }
 
     public function onEarlyKernelRequest(GetResponseEvent $event)

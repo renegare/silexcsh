@@ -9,11 +9,21 @@ class CookieSessionServiceProviderTest extends \PHPUnit_Framework_TestCase {
 
     protected $client;
     protected $app;
+    protected $cookieName = 'CUSTOMNAME';
 
     public function setUp() {
         $app = new Application();
 
-        $app->register(new CookieSessionServiceProvider);
+        $app->register(new CookieSessionServiceProvider, [
+            'session.cookie.options' => [
+                'name' => 'CUSTOMNAME', // string
+                'lifetime' => 0,        // int
+                'path' => '/',          // string
+                'domain' => null,       // string
+                'secure' => false,      // boolean
+                'httponly' => true      // boolean
+            ]
+        ]);
 
         $app->get('/doing-nothing', function(Application $app) {
             return 'Nothing going on here with sessions';
@@ -50,7 +60,7 @@ class CookieSessionServiceProviderTest extends \PHPUnit_Framework_TestCase {
         $this->assertTrue($response->isOk());
         $this->assertEquals('Nothing going on here with sessions', $response->getContent());
 
-        $cookie = $client->getCookieJar()->get('silexcsh');
+        $cookie = $client->getCookieJar()->get($this->cookieName);
         $this->assertNull($cookie);
     }
     /**
@@ -64,7 +74,7 @@ class CookieSessionServiceProviderTest extends \PHPUnit_Framework_TestCase {
         $this->assertTrue($response->isOk());
         $this->assertEquals('Check your cookie!', $response->getContent());
 
-        $cookie = $client->getCookieJar()->get('silexcsh');
+        $cookie = $client->getCookieJar()->get($this->cookieName);
         $this->assertNotNull($cookie);
         $this->assertEquals(['message' => 'Hello There!'], $this->getSessionData($cookie));
     }
@@ -95,7 +105,7 @@ class CookieSessionServiceProviderTest extends \PHPUnit_Framework_TestCase {
         $this->assertTrue($response->isOk());
         $this->assertEquals('Check your cookie!', $response->getContent());
 
-        $cookie = $client->getCookieJar()->get('silexcsh');
+        $cookie = $client->getCookieJar()->get($this->cookieName);
         $this->assertNotNull($cookie);
         $cookieData = $this->getSessionData($cookie);
         $this->assertEquals(['message' => 'Hello There!'], $cookieData);
@@ -109,25 +119,28 @@ class CookieSessionServiceProviderTest extends \PHPUnit_Framework_TestCase {
         $response = $client->getResponse();
         $this->assertTrue($response->isOk());
         $this->assertEquals('Ok Bye Bye!', $response->getContent());
-        $this->assertNull($client->getCookieJar()->get('silexcsh'));
+        $this->assertNull($client->getCookieJar()->get($this->cookieName));
 
         $client->request('GET', '/read');
         $response = $client->getResponse();
         $this->assertTrue($response->isOk());
         $this->assertEquals(print_r([], true), $response->getContent());
-        $this->assertNull($client->getCookieJar()->get('silexcsh'));
+        $this->assertNull($client->getCookieJar()->get($this->cookieName));
     }
 
     public function testSessionNameMatchesCookieName() {
         $client = $this->client;
+        $app = $this->app;
 
         $client->request('GET', '/persist');
         $response = $client->getResponse();
         $this->assertTrue($response->isOk());
-        
-        $session = $this->app['session'];
+
+        $session = $app['session'];
+        $sessionOptions = $app['session.cookie.options'];
+
         $this->assertInstanceOf('Renegare\SilexCSH\CookieSession', $session);
-        $this->assertEquals('silexcsh', $session->getName());
+        $this->assertEquals($sessionOptions['name'], $session->getName());
     }
 
     protected function getSessionData(Cookie $cookie) {
@@ -135,7 +148,7 @@ class CookieSessionServiceProviderTest extends \PHPUnit_Framework_TestCase {
     }
 
     protected function createSessionCookie(array $data) {
-        $cookie = new Cookie('silexcsh', serialize([0, serialize($data)]));
+        $cookie = new Cookie($this->cookieName, serialize([0, serialize($data)]));
         return $cookie;
     }
 }
