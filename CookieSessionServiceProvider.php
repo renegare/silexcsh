@@ -30,6 +30,11 @@ class CookieSessionServiceProvider extends SessionServiceProvider {
                 $app['session.storage.handler']
             );
         });
+        
+        $app['session'] = $app->extend('session', function ($session, $app) {
+            $session->setName('silexcsh');
+            return $session;
+        });
     }
 
     public function onEarlyKernelRequest(GetResponseEvent $event)

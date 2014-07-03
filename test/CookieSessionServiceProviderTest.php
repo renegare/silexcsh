@@ -7,6 +7,9 @@ use Symfony\Component\BrowserKit\Cookie;
 
 class CookieSessionServiceProviderTest extends \PHPUnit_Framework_TestCase {
 
+    protected $client;
+    protected $app;
+
     public function setUp() {
         $app = new Application();
 
@@ -33,6 +36,7 @@ class CookieSessionServiceProviderTest extends \PHPUnit_Framework_TestCase {
         // test setup code so any errors is made visible
         $app['exception_handler']->disable();
         $this->client = new Client($app, []);
+        $this->app = $app;
     }
 
     /**
@@ -114,11 +118,21 @@ class CookieSessionServiceProviderTest extends \PHPUnit_Framework_TestCase {
         $this->assertNull($client->getCookieJar()->get('silexcsh'));
     }
 
-    public function getSessionData(Cookie $cookie) {
+    public function testSessionNameMatchesCookieName() {
+        $client = $this->client;
+
+        $client->request('GET', '/persist');
+        $response = $client->getResponse();
+        $this->assertTrue($response->isOk());
+
+        $this->assertEquals('silexcsh', $this->app['session']->getName());
+    }
+
+    protected function getSessionData(Cookie $cookie) {
         return unserialize(unserialize($cookie->getValue())[1]);
     }
 
-    public function createSessionCookie(array $data) {
+    protected function createSessionCookie(array $data) {
         $cookie = new Cookie('silexcsh', serialize([0, serialize($data)]));
         return $cookie;
     }
