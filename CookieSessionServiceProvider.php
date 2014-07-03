@@ -50,6 +50,10 @@ class CookieSessionServiceProvider extends SessionServiceProvider implements Log
             $session->setName('silexcsh');
             return $session;
         });
+
+        if(isset($app['logger']) && $app['logger']) {
+            $this->setLogger($app['logger']);
+        }
     }
 
     public function onEarlyKernelRequest(GetResponseEvent $event)
@@ -65,6 +69,8 @@ class CookieSessionServiceProvider extends SessionServiceProvider implements Log
         $handler->setRequest($request);
         $data = unserialize($handler->read(''));
 
+        $this->info('> SESSION INCOMING: ', ['session_data' => $data]);
+
         if(is_array($data) && $data > 0) {
             $this->app['session']->replace($data);
         }
@@ -78,6 +84,8 @@ class CookieSessionServiceProvider extends SessionServiceProvider implements Log
         $session = $event->getRequest()->getSession();
         $data = $session->all();
         $handler = $this->app['session.storage.handler'];
+
+        $this->info('< SESSION OUTGOINT: ', ['session_data' => $data]);
 
         if(count($data) > 0) {
             $handler->write('', serialize($data));
