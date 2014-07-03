@@ -21,6 +21,7 @@
     <filter>
         <whitelist>
             <file>CookieSessionHandler.php</file>
+            <file>CookieSessionServiceProvider.php</file>
         </whitelist>
     </filter>
 

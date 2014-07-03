@@ -40,29 +40,14 @@ class CookieSessionServiceProvider extends SessionServiceProvider {
             return;
         }
 
-        // bootstrap the session
-        if (!isset($this->app['session'])) {
-            return;
-        }
-
         $request = $event->getRequest();
-        $this->app['session.storage.handler']->setRequest($request);
+        $handler = $this->app['session.storage.handler'];
+        $handler->setRequest($request);
+        $data = unserialize($handler->read(''));
 
-        /*
-        $session = $this->app['session'];
-        var_dump($session->getName());
-        die;
-        $cookies = $event->getRequest()->cookies;
-
-        if ($cookies->has($session->getName())) {
-            $session->setId($cookies->get($session->getName()));
-        } else {
-            $session->migrate(false);
+        if(is_array($data) && $data > 0) {
+            $this->app['session']->replace($data);
         }
-
-        $session = $this->app['session'];
-        */
-
     }
 
     public function onKernelResponse(FilterResponseEvent $event) {
@@ -71,25 +56,26 @@ class CookieSessionServiceProvider extends SessionServiceProvider {
         }
 
         $session = $event->getRequest()->getSession();
+        $data = $session->all();
+        $handler = $this->app['session.storage.handler'];
 
-        if ($session && $session->isStarted()) {
-            $session->save();
+        if(count($data) > 0) {
+            $handler->write('', serialize($data));
+        } else {
+            $handler->destroy('', '');
+        }
 
-            $handler = $this->app['session.storage.handler'];
-            $handler->write('', serialize($session->all()));
-            $cookie = $handler->getCookie();
+        $cookie = $handler->getCookie();
 
-            if($cookie instanceof Cookie) {
-                $event->getResponse()
-                    ->headers->setCookie($cookie);
-            }
+        if($cookie instanceof Cookie) {
+            $event->getResponse()
+                ->headers->setCookie($cookie);
         }
     }
 
     public function boot(Application $app) {
         $app['dispatcher']->addListener(KernelEvents::REQUEST, array($this, 'onEarlyKernelRequest'), 128);
 
-        // $app['dispatcher']->addListener(KernelEvents::REQUEST, array($this, 'onKernelRequest'), 192);
         $app['dispatcher']->addListener(KernelEvents::RESPONSE, array($this, 'onKernelResponse'), -128);
     }
 }

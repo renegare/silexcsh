@@ -61,7 +61,7 @@ class CookieSessionHandler implements \SessionHandlerInterface {
         $this->cookie = new Cookie(
             $this->name,
             null,
-            0,
+            strtotime('-1 hour'),
             $this->path,
             $this->domain,
             $this->secure,
