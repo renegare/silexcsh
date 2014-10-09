@@ -4,6 +4,7 @@ namespace Renegare\SilexCSH;
 
 use Silex\Application;
 use Symfony\Component\HttpKernel\Client;
+use Symfony\Component\BrowserKit\Cookie;
 
 trait CookieSessionTestTrait {
 
@@ -56,5 +57,19 @@ trait CookieSessionTestTrait {
         }
 
         return $app;
+    }
+
+    /**
+     * save cookie session data to a client
+     * @param Client $client - client containing the cookie data
+     * @param Application|string $app - if Application we retrieve the cookie name from the 'session.cookie.options' configuration else we assume this is the name of the cookie
+     * @param array $data - session data
+     * @throws RuntimeException - when something is amiss, please read the exception message
+     * @return array
+     */
+    public function createSessionCookie(Client $client, $app, array $data) {
+        $cookie = new Cookie($this->getCookieSessionName($app), serialize([0, serialize($data)]));
+        $client->getCookieJar()->set($cookie);
+        return $cookie;
     }
 }

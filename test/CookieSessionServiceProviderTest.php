@@ -15,38 +15,6 @@ class CookieSessionServiceProviderTest extends \PHPUnit_Framework_TestCase {
     protected $app;
     protected $cookieName = 'CUSTOMNAME';
 
-    public function testSessionDataIsNotSharedAmongstApplicationInstances() {
-        $app = new Application();
-        $app['exception_handler']->disable();
-        $app->register(new CookieSessionServiceProvider);
-        $app->get('/resource', function(Application $app) {
-            $session = $app['session'];
-            $this->assertEquals([], $session->all());
-            $session->set('param', 'value');
-            return '';
-        });
-        $client = new Client($app);
-        $client->request('GET', '/resource');
-        $response = $client->getResponse();
-        $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals(['param' => 'value'], $this->getSessionData($client, $app));
-
-        // completely new set of instances should have an empty session
-        $app = new Application();
-        $app['exception_handler']->disable();
-        $app->register(new CookieSessionServiceProvider);
-        $app->get('/resource', function(Application $app) {
-            $session = $app['session'];
-            $this->assertEquals([], $session->all());
-            return '';
-        });
-        $client = new Client($app);
-        $client->request('GET', '/resource');
-        $response = $client->getResponse();
-        $this->assertEquals(200, $response->getStatusCode());
-        $this->assertEquals([], $this->getSessionData($client, $app));
-    }
-
     public function setUp() {
         $app = new Application();
 
@@ -110,9 +78,7 @@ class CookieSessionServiceProviderTest extends \PHPUnit_Framework_TestCase {
         $this->assertTrue($response->isOk());
         $this->assertEquals('Check your cookie!', $response->getContent());
 
-        $cookie = $client->getCookieJar()->get($this->cookieName);
-        $this->assertNotNull($cookie);
-        $this->assertEquals(['message' => 'Hello There!'], $this->getCookieSessionData($cookie));
+        $this->assertEquals(['message' => 'Hello There!'], $this->getSessionData($client, $this->app));
     }
 
     /**
@@ -122,7 +88,7 @@ class CookieSessionServiceProviderTest extends \PHPUnit_Framework_TestCase {
         $client = $this->client;
         $sessionData = ['message' => time()];
 
-        $client->getCookieJar()->set($this->createSessionCookie($sessionData));
+        $this->createSessionCookie($client, $this->app, $sessionData);
 
         $client->request('GET', '/read');
         $response = $client->getResponse();
@@ -140,10 +106,7 @@ class CookieSessionServiceProviderTest extends \PHPUnit_Framework_TestCase {
         $response = $client->getResponse();
         $this->assertTrue($response->isOk());
         $this->assertEquals('Check your cookie!', $response->getContent());
-
-        $cookie = $client->getCookieJar()->get($this->cookieName);
-        $this->assertNotNull($cookie);
-        $cookieData = $this->getCookieSessionData($cookie);
+        $cookieData = $this->getSessionData($client, $this->app);
         $this->assertEquals(['message' => 'Hello There!'], $cookieData);
 
         $client->request('GET', '/read');
@@ -179,12 +142,35 @@ class CookieSessionServiceProviderTest extends \PHPUnit_Framework_TestCase {
         $this->assertEquals($sessionOptions['name'], $session->getName());
     }
 
-    protected function getCookieSessionData(Cookie $cookie) {
-        return unserialize(unserialize($cookie->getValue())[1]);
-    }
+    public function testSessionDataIsNotSharedAmongstApplicationInstances() {
+        $app = new Application();
+        $app['exception_handler']->disable();
+        $app->register(new CookieSessionServiceProvider);
+        $app->get('/resource', function(Application $app) {
+            $session = $app['session'];
+            $this->assertEquals([], $session->all());
+            $session->set('param', 'value');
+            return '';
+        });
+        $client = new Client($app);
+        $client->request('GET', '/resource');
+        $response = $client->getResponse();
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals(['param' => 'value'], $this->getSessionData($client, $app));
 
-    protected function createSessionCookie(array $data) {
-        $cookie = new Cookie($this->cookieName, serialize([0, serialize($data)]));
-        return $cookie;
+        // completely new set of instances should have an empty session
+        $app = new Application();
+        $app['exception_handler']->disable();
+        $app->register(new CookieSessionServiceProvider);
+        $app->get('/resource', function(Application $app) {
+            $session = $app['session'];
+            $this->assertEquals([], $session->all());
+            return '';
+        });
+        $client = new Client($app);
+        $client->request('GET', '/resource');
+        $response = $client->getResponse();
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals([], $this->getSessionData($client, $app));
     }
 }
