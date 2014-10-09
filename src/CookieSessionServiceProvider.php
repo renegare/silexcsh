@@ -25,10 +25,14 @@ class CookieSessionServiceProvider extends SessionServiceProvider implements Log
     {
         parent::register($app);
 
+        if(!isset($app['session.cookie.options'])) {
+            $app['session.cookie.options'] = [];
+        }
+        
         $this->app = $app;
 
         $app['session.storage.handler'] = $app->share(function ($app) {
-            $options = $this->mergeDefaultOptions(isset($app['session.cookie.options'])? $app['session.cookie.options'] : []);
+            $options = CookieSessionServiceProvider::mergeDefaultOptions(isset($app['session.cookie.options'])? $app['session.cookie.options'] : []);
             return new CookieSessionHandler(
                 $options['name'],
                 $options['lifetime'],
@@ -54,7 +58,7 @@ class CookieSessionServiceProvider extends SessionServiceProvider implements Log
                 }
             }
 
-            $options = $this->mergeDefaultOptions(isset($app['session.cookie.options'])? $app['session.cookie.options'] : []);
+            $options = CookieSessionServiceProvider::mergeDefaultOptions(isset($app['session.cookie.options'])? $app['session.cookie.options'] : []);
 
             $session = new CookieSession($app['session.storage']);
             $session->setName($options['name']);
@@ -62,7 +66,7 @@ class CookieSessionServiceProvider extends SessionServiceProvider implements Log
         });
     }
 
-    protected function mergeDefaultOptions(array $options) {
+    public static function mergeDefaultOptions(array $options) {
         return array_merge([
             'name' => 'PHPSESSIONID', // string
             'lifetime' => 0,        // int
@@ -86,11 +90,9 @@ class CookieSessionServiceProvider extends SessionServiceProvider implements Log
         $handler->setRequest($request);
         $data = unserialize($handler->read(''));
 
-        $this->info('> SESSION INCOMING: ', ['session_data' => $data]);
+        $this->debug('> session data', ['session_data' => $data]);
 
-        if(is_array($data) && $data > 0) {
-            $this->app['session']->replace($data);
-        }
+        $this->app['session']->replace(is_array($data) && $data > 0? $data : []);
     }
 
     public function onKernelResponse(FilterResponseEvent $event) {
@@ -102,7 +104,7 @@ class CookieSessionServiceProvider extends SessionServiceProvider implements Log
         $data = $session->all();
         $handler = $this->app['session.storage.handler'];
 
-        $this->info('< SESSION OUTGOING: ', ['session_data' => $data]);
+        $this->debug('< session data', ['session_data' => $data]);
 
         if(count($data) > 0) {
             $handler->write('', serialize($data));

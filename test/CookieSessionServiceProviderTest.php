@@ -1,15 +1,51 @@
 <?php
 
 use Silex\Application;
-use Renegare\SilexCSH\CookieSessionServiceProvider;
+
 use Symfony\Component\HttpKernel\Client;
 use Symfony\Component\BrowserKit\Cookie;
 
+use Renegare\SilexCSH\CookieSessionServiceProvider;
+use Renegare\SilexCSH\CookieSessionTestTrait;
+
 class CookieSessionServiceProviderTest extends \PHPUnit_Framework_TestCase {
+    use CookieSessionTestTrait;
 
     protected $client;
     protected $app;
     protected $cookieName = 'CUSTOMNAME';
+
+    public function testSessionDataIsNotSharedAmongstApplicationInstances() {
+        $app = new Application();
+        $app['exception_handler']->disable();
+        $app->register(new CookieSessionServiceProvider);
+        $app->get('/resource', function(Application $app) {
+            $session = $app['session'];
+            $this->assertEquals([], $session->all());
+            $session->set('param', 'value');
+            return '';
+        });
+        $client = new Client($app);
+        $client->request('GET', '/resource');
+        $response = $client->getResponse();
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals(['param' => 'value'], $this->getSessionData($client, $app));
+
+        // completely new set of instances should have an empty session
+        $app = new Application();
+        $app['exception_handler']->disable();
+        $app->register(new CookieSessionServiceProvider);
+        $app->get('/resource', function(Application $app) {
+            $session = $app['session'];
+            $this->assertEquals([], $session->all());
+            return '';
+        });
+        $client = new Client($app);
+        $client->request('GET', '/resource');
+        $response = $client->getResponse();
+        $this->assertEquals(200, $response->getStatusCode());
+        $this->assertEquals([], $this->getSessionData($client, $app));
+    }
 
     public function setUp() {
         $app = new Application();
@@ -76,7 +112,7 @@ class CookieSessionServiceProviderTest extends \PHPUnit_Framework_TestCase {
 
         $cookie = $client->getCookieJar()->get($this->cookieName);
         $this->assertNotNull($cookie);
-        $this->assertEquals(['message' => 'Hello There!'], $this->getSessionData($cookie));
+        $this->assertEquals(['message' => 'Hello There!'], $this->getCookieSessionData($cookie));
     }
 
     /**
@@ -107,7 +143,7 @@ class CookieSessionServiceProviderTest extends \PHPUnit_Framework_TestCase {
 
         $cookie = $client->getCookieJar()->get($this->cookieName);
         $this->assertNotNull($cookie);
-        $cookieData = $this->getSessionData($cookie);
+        $cookieData = $this->getCookieSessionData($cookie);
         $this->assertEquals(['message' => 'Hello There!'], $cookieData);
 
         $client->request('GET', '/read');
@@ -143,7 +179,7 @@ class CookieSessionServiceProviderTest extends \PHPUnit_Framework_TestCase {
         $this->assertEquals($sessionOptions['name'], $session->getName());
     }
 
-    protected function getSessionData(Cookie $cookie) {
+    protected function getCookieSessionData(Cookie $cookie) {
         return unserialize(unserialize($cookie->getValue())[1]);
     }
 

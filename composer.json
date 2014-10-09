@@ -7,7 +7,7 @@
 
     "autoload": {
         "psr-4": {
-            "Renegare\\SilexCSH\\": ""
+            "Renegare\\SilexCSH\\": "src"
         }
     },
 
@@ -22,7 +22,10 @@
         "silex/silex": ">=1.0",
         "symfony/http-foundation": ">=2.4,<2.6-dev",
         "phpunit/phpunit": "3.7.*",
-        "symfony/browser-kit": ">=2.3,<2.6-dev",
-        "satooshi/php-coveralls": "dev-master"
+        "symfony/browser-kit": ">=2.3,<2.6-dev"
+    },
+
+    "scripts": {
+        "test": "phpunit --coverage-text"
     }
 }
