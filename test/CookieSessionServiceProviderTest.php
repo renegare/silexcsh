@@ -17,7 +17,6 @@ class CookieSessionServiceProviderTest extends \PHPUnit_Framework_TestCase {
 
     public function setUp() {
         $app = new Application();
-
         $app->register(new CookieSessionServiceProvider, [
             'session.cookie.options' => [
                 'name' => 'CUSTOMNAME', // string
@@ -28,7 +27,8 @@ class CookieSessionServiceProviderTest extends \PHPUnit_Framework_TestCase {
                 'httponly' => true      // boolean
             ]
         ]);
-
+        $app['session.test'] = true;
+        $app['logger'] = $this->getMock('Psr\Log\LoggerInterface');
         $app->get('/doing-nothing', function(Application $app) {
             return 'Nothing going on here with sessions';
         });
